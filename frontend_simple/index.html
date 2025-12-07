@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StocX - AI Stock Price Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 30px;
+        }
+
+        .logo {
+            height: 90px;
+            width: auto;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
+        .header-text h1 {
+            color: #333;
+            font-size: 3em;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .header-text p {
+            color: #666;
+            font-size: 2.5em;
+            margin: 5px 0 0 0;
+        }
+
+        .content {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #4d7ce1 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            display: none;
+        }
+
+        .spinner {
+            margin: 0 auto 20px;
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .metric p {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            padding: 20px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-container">
+                <img src="stocx_logo.png" alt="StocX Logo" class="logo">
+                <div class="header-text">
+                    <p>Stock price prediction using AI</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="input-group">
+                <label for="symbol">Select Nifty 50 Stock:</label>
+                <select id="symbol">
+                    <option value="">-- Choose a Stock --</option>
+                    <!-- Options will be populated by JS -->
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="customSymbol">Or enter custom symbol (e.g., RELIANCE.NS):</label>
+                <input type="text" id="customSymbol" placeholder="e.g., RELIANCE.NS" style="text-transform: uppercase;">
+            </div>
+
+            <button onclick="runPrediction()" id="predictBtn">🔮 Predict Next 7 Days</button>
+
+            <div id="error" class="error"></div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Analyzing stock data...<br>This may take 30-60 seconds</p>
+            </div>
+
+            <div id="results">
+                <h2>📊 Prediction Results</h2>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <h3>Current High</h3>
+                        <p id="currentHigh">-</p>
+                    </div>
+                    <div class="metric">
+                        <h3>Current Low</h3>
+                        <p id="currentLow">-</p>
+                    </div>
+                </div>
+
+                <canvas id="chart"></canvas>
+
+                <table id="predTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>High (₹)</th>
+                            <th>Low (₹)</th>
+                            <th>Range</th>
+                        </tr>
+                    </thead>
+                    <tbody id="predBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer>
+            <p> Wide diversification is only required when investors do not understand what they are doing</p>
+        </footer>
+    </div>
+
+    <script>
+        let chart = null;
+
+        // Fetch stocks on load
+        window.onload = async function () {
+            try {
+                const response = await fetch('/api/stocks');
+                const data = await response.json();
+                const select = document.getElementById('symbol');
+
+                data.stocks.forEach(stock => {
+                    const option = document.createElement('option');
+                    option.value = stock;
+                    option.text = stock;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching stocks:', error);
+            }
+        };
+
+        async function runPrediction() {
+            const select = document.getElementById('symbol').value;
+            const custom = document.getElementById('customSymbol').value.toUpperCase();
+            const symbol = custom || select;
+
+            if (!symbol) {
+                showError('Please select or enter a stock symbol');
+                return;
+            }
+
+            hideError();
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('predictBtn').disabled = true;
+
+            try {
+                const response = await fetch(`/api/predict/${symbol}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('predictBtn').disabled = false;
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('currentHigh').textContent = '₹' + data.current.high;
+            document.getElementById('currentLow').textContent = '₹' + data.current.low;
+
+            const tbody = document.getElementById('predBody');
+            tbody.innerHTML = '';
+
+            data.predictions.forEach(p => {
+                const range = (p.high - p.low).toFixed(2);
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.date_formatted}</td>
+                        <td>₹${p.high}</td>
+                        <td>₹${p.low}</td>
+                        <td>₹${range}</td>
+                    </tr>
+                `;
+            });
+
+            createChart(data);
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function createChart(data) {
+            const ctx = document.getElementById('chart').getContext('2d');
+
+            if (chart) chart.destroy();
+
+            const labels = data.predictions.map(p => p.date_formatted);
+            const highs = data.predictions.map(p => p.high);
+            const lows = data.predictions.map(p => p.low);
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'High',
+                        data: highs,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointRadius: 5
+                    }, {
+                        label: 'Low',
+                        data: lows,
+                        borderColor: '#764ba2',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: data.symbol + ' - 7 Day Prediction',
+                            font: { size: 18, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function (value) {
+                                    return '₹' + value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('error');
+            err.textContent = msg;
+            err.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>Stock Price Prediction System</h1>
+            <p>AI-powered predictions using ARIMA, LSTM & Prophet models</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="content">
+            <!-- Stock Selection -->
+            <div class="selection-box">
+                <h2>Select or Search Stock</h2>
+                
+                <!-- Popular Stocks Dropdown -->
+                <div class="input-group">
+                    <label for="stockSelect">Popular Stocks:</label>
+                    <select id="stockSelect" onchange="selectStock()">
+                        <option value="">-- Choose a Stock --</option>
+                        {% for stock in stocks %}
+                        <option value="{{ stock }}">{{ stock }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- OR Text -->
+                <div class="or-divider">OR</div>
+
+                <!-- Custom Search -->
+                <div class="input-group">
+                    <label for="stockSearch">Search Stock Symbol:</label>
+                    <div class="search-container">
+                        <input type="text" id="stockSearch" placeholder="e.g., AAPL, TSLA, MSFT" 
+                               onkeyup="searchStock(event)">
+                        <button onclick="validateSearch()" class="btn-search">Search</button>
+                    </div>
+                    <small class="hint">Enter stock ticker symbol and click Search to verify availability</small>
+                </div>
+
+                <!-- Selected Stock Display -->
+                <div id="selectedStock" class="selected-stock" style="display: none;">
+                    <div class="stock-info">
+                        <span class="stock-symbol" id="displaySymbol"></span>
+                        <span class="status-badge" id="statusBadge"></span>
+                    </div>
+                </div>
+
+                <!-- Predict Button -->
+                <button id="predictBtn" class="btn-predict" onclick="predictStock()" disabled>
+                    🔮 Predict Next 7 Days
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analyzing stock data and training models...<br>This may take 30-60 seconds</p>
+            </div>
+
+            <!-- Results Section -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <h2>📈 Prediction Results</h2>
+                
+                <!-- Current Price -->
+                <div class="current-price">
+                    <div class="price-card">
+                        <span class="label">Current High</span>
+                        <span class="value" id="currentHigh">-</span>
+                    </div>
+                    <div class="price-card">
+                        <span class="label">Current Low</span>
+                        <span class="value" id="currentLow">-</span>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-container">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+
+                <!-- Predictions Table -->
+                <div class="table-container">
+                    <table id="predictionsTable">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Predicted High ($)</th>
+                                <th>Predicted Low ($)</th>
+                                <th>Range</th>
+                            </tr>
+                        </thead>
+                        <tbody id="predictionsBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="disclaimer">
+                    ⚠️ <strong>Disclaimer:</strong> These predictions are for educational purposes only. 
+                    Always consult financial advisors before making investment decisions.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Powered by ARIMA, LSTM & Prophet | Yahoo Finance API</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
